@@ -9,7 +9,7 @@ public class ProblemInstance {
     public List<String> lines;
     public String name;
     public int bestKnownSolution;
-    public int bestComputedSolution = -1;
+    public int bestComputedSolution = Integer.MAX_VALUE;
     public int currentSolution = 0;
     public List<Point> points = new ArrayList<>();
     public int numPoints;
@@ -22,7 +22,7 @@ public class ProblemInstance {
 
         // Add points with their coordinates
         for (int i = 7; i < lines.size() - 1; ++i) {
-            String[] line = lines.get(i).split(" ");
+            String[] line = lines.get(i).strip().split(" ");
             points.add(new Point(Integer.parseInt(line[0]), Double.parseDouble(line[1]), Double.parseDouble(line[2])));
         }
 
@@ -39,11 +39,10 @@ public class ProblemInstance {
 
     public List<Integer> solve(int startIndex) {
         List<Integer> result = new ArrayList<>();
-        List<Integer> visited = new ArrayList<>();
         int currentNode = startIndex;
+        currentSolution = 0;
 
-        result.add(startIndex);
-        visited.add(startIndex);
+        result.add(currentNode);
 
         // First node is already in, so start one ahead
         for (int i = 1; i < numPoints; ++i) {
@@ -54,20 +53,21 @@ public class ProblemInstance {
             int index = 0;
             double d = Double.POSITIVE_INFINITY;
             for (int k = 0; k < dist.length; ++k) {
-                if (dist[k] < d && dist[k] != 0 && !visited.contains(k)) {
+                if (dist[k] < d && dist[k] != 0 && !result.contains(k)) {
                     index = k;
                     d = dist[k];
                 }
             }
 
             result.add(index);
-            visited.add(index);
             currentNode = index;
             currentSolution += d;
         }
 
-        // Save only best solution found
-        if (bestComputedSolution == -1 || currentSolution < bestComputedSolution) {
+        result.add(startIndex);
+        currentSolution += distMatrix[startIndex][currentNode];
+
+        if (currentSolution < bestComputedSolution) {
             bestComputedSolution = currentSolution;
         }
 

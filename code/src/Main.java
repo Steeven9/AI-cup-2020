@@ -13,8 +13,6 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author Stefano Taillefert
  */
 public class Main {
-
-    // TODO max time: 3 min
     // TODO clean up garbage prints
 
     // Usage: Main filename [index | -1]
@@ -29,17 +27,17 @@ public class Main {
             // File only -> pick random node (done later)
             if (Files.isRegularFile(Paths.get(args[0]))) {
                 file = args[0];
-                System.out.println("Using file " + file);
+                //System.out.println("Using file " + file);
             } else {
                 System.out.println("Invalid filename");
                 System.exit(-1);
             }
-            System.out.println("Starting from random node");
+            //System.out.println("Starting from random node");
         } else if (args.length == 2) {
             // Node specified, override index
             if (Files.isRegularFile(Paths.get(args[0]))) {
                 file = args[0];
-                System.out.println("Using file " + file);
+                //System.out.println("Using file " + file);
             } else {
                 System.out.println("Invalid filename");
                 System.exit(-1);
@@ -48,13 +46,13 @@ public class Main {
             try {
                 index = Integer.parseInt(args[1]);
                 if (index == -1) {
-                    System.out.println("Testing all nodes (might be slow!)");
+                    //System.out.println("Testing all nodes (might be slow!)");
                 } else {
                     if (index == 0) {
                         System.err.println("Invalid index (they start from 1)");
                         System.exit(-1);
                     }
-                    System.out.println("Starting from node " + index);
+                    //System.out.println("Starting from node " + index);
                     --index;
                 }
             } catch (NumberFormatException nfe) {
@@ -89,6 +87,7 @@ public class Main {
         if (index == -1) {
             //Test all nodes in sequence
             List<Integer> tempSolution;
+
             startTime = System.nanoTime();
             for (int i = 0; i < p.numPoints; ++i) {
                 tempSolution = p.solve(i);
@@ -101,7 +100,7 @@ public class Main {
             if (index == -2) {
                 // Pick random starting node
                 index = ThreadLocalRandom.current().nextInt(0, p.numPoints);
-                System.out.println("Node chosen: " + index);
+                //System.out.println("Node chosen: " + index);
             }
             startTime = System.nanoTime();
             solutionPath = p.solve(index);
@@ -111,11 +110,9 @@ public class Main {
         solutionPath.forEach(e -> System.out.print((e + 1) + " "));     //cities indices start from 1
         System.out.print("\nSolution for " + p.name + ": " + p.bestComputedSolution);
         System.out.println(" (best known is " + p.bestKnownSolution + ")");
-        if (index == -1) {
-            System.out.println("Best node to start from is " + (solutionPath.get(0) + 1));
-        }
-        System.out.println("Time taken (ms): " + (endTime - startTime) / 1000);
-        System.out.println("Nodes visited: " + solutionPath.size() + "/" + p.numPoints);
+        System.out.println("Start node: " + (solutionPath.get(0) + 1));
+        System.out.println("Time taken (ms): " + (endTime - startTime) / 1000000);
+        System.out.println("Nodes visited: " + (solutionPath.size() - 1) + "/" + p.numPoints);
     }
 
     private static void exit() {

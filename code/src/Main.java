@@ -8,8 +8,7 @@ import java.util.List;
 
 /**
  * AI Cup 2020 @ USI, Lugano
- * The main wrapper to compute a TSP problem. The algorithm used is best Nearest-Neighbour
- * with the 2opt optimizer.
+ * The main wrapper to compute a TSP problem. The algorithm used is best Nearest-Neighbour.
  * @author Stefano Taillefert
  */
 public class Main {
@@ -71,17 +70,16 @@ public class Main {
         }
 
         ProblemInstance p = new ProblemInstance(lines);
-        long startTime = 0, endTime = 0;
+        long startTime, endTime;
 
         if (index == -1) {
             //Test all nodes in sequence
             List<Integer> tempSolution = p.solution;
-            int tempSolutionCost = p.currentCost;
+            double tempSolutionCost = p.currentCost;
 
             startTime = System.nanoTime();
             for (int i = 0; i < p.numPoints; ++i) {
                 p.solve(i);
-                //p.optimize();
 
                 if (p.currentCost < tempSolutionCost) {
                     tempSolution = p.solution;
@@ -95,7 +93,6 @@ public class Main {
         } else {
             startTime = System.nanoTime();
             p.solve(index);
-            p.optimize();
             endTime = System.nanoTime();
         }
 

@@ -8,8 +8,8 @@ import java.util.List;
 public class ProblemInstance {
     public List<String> lines;
     public String name;
-    public int bestKnownCost;
-    public int currentCost = Integer.MAX_VALUE;
+    public double bestKnownCost;
+    public double currentCost = Integer.MAX_VALUE;
     public List<Point> points = new ArrayList<>();
     public int numPoints;
     public double[][] distMatrix;
@@ -72,53 +72,5 @@ public class ProblemInstance {
 
         solution.add(startIndex);
         currentCost += distMatrix[startIndex][currentNode];
-    }
-
-    // Optimize a path with the 2opt algorithm
-    public void optimize() {
-        double gain;
-        int bestFirst = -1, bestSecond = -1;
-        int first, second, third, fourth;
-        boolean improved = true;
-
-        while (improved) {
-            improved = false;
-
-            for (int i = 0; i < numPoints - 2; ++i) {
-                gain = 0;
-                first = solution.get(i);
-                second = solution.get(i + 1);
-
-                for (int j = i + 2; j < numPoints; ++j) {
-                    third = solution.get(j);
-                    fourth = solution.get((j + 1) % numPoints);
-
-                    double costABCD = distMatrix[first][second] + distMatrix[third][fourth];
-                    double costACBD = distMatrix[first][third] + distMatrix[second][fourth];
-                    double diffCost = costACBD - costABCD;
-
-                    if (diffCost < gain) {
-                        gain = diffCost;
-                        bestFirst = i;
-                        bestSecond = j;
-                    }
-                }
-
-                if (gain < 0) {
-                    swap(bestFirst + 1, bestSecond, solution);
-                    improved = true;
-                }
-            }
-        }
-    }
-
-    // Auxiliary function for 2opt
-    private void swap(int i, int j, List<Integer> solution) {
-        while (i < j) {
-            solution.set(i, solution.get(j));
-            solution.set(j, solution.get(i));
-            ++i;
-            --j;
-        }
     }
 }

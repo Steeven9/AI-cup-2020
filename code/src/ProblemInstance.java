@@ -8,17 +8,17 @@ import java.util.List;
 public class ProblemInstance {
     public List<String> lines;
     public String name;
-    public int bestKnownSolution;
-    public int bestComputedSolution = Integer.MAX_VALUE;
-    public int currentSolution = 0;
+    public int bestKnownCost;
+    public int currentCost = 0;
     public List<Point> points = new ArrayList<>();
     public int numPoints;
     public double[][] distMatrix;
+    public List<Integer> solution = new ArrayList<>();
 
     public ProblemInstance(List<String> data) {
         lines = data;
         name = lines.get(0).split(":")[1].strip();
-        bestKnownSolution = Integer.parseInt(lines.get(5).split(":")[1].strip());
+        bestKnownCost = Integer.parseInt(lines.get(5).split(":")[1].strip());
 
         // Add points with their coordinates
         for (int i = 7; i < lines.size() - 1; ++i) {
@@ -37,12 +37,12 @@ public class ProblemInstance {
         }
     }
 
-    public List<Integer> solve(int startIndex) {
-        List<Integer> result = new ArrayList<>();
+    public void solve(int startIndex) {
+        solution = new ArrayList<>();
+        currentCost = 0;
         int currentNode = startIndex;
-        currentSolution = 0;
 
-        result.add(currentNode);
+        solution.add(currentNode);
 
         // First node is already in, so start one ahead
         for (int i = 1; i < numPoints; ++i) {
@@ -52,25 +52,68 @@ public class ProblemInstance {
             // Find closest city
             int index = 0;
             double d = Double.POSITIVE_INFINITY;
+
             for (int k = 0; k < dist.length; ++k) {
-                if (dist[k] < d && dist[k] != 0 && !result.contains(k)) {
+                if (dist[k] < d && dist[k] != 0 && !solution.contains(k)) {
                     index = k;
                     d = dist[k];
                 }
             }
 
-            result.add(index);
+            solution.add(index);
             currentNode = index;
-            currentSolution += d;
+            currentCost += d;
         }
 
-        result.add(startIndex);
-        currentSolution += distMatrix[startIndex][currentNode];
+        solution.add(startIndex);
+        currentCost += distMatrix[startIndex][currentNode];
+    }
 
-        if (currentSolution < bestComputedSolution) {
-            bestComputedSolution = currentSolution;
+    // Optimize a path with the 2opt algorithm
+    public void optimize() {
+        double gain;
+        int bestFirst = -1, bestSecond = -1;
+        int first, second, third, fourth;
+        boolean improved = true;
+
+        while (improved) {
+            improved = false;
+
+            for (int i = 0; i < numPoints - 2; ++i) {
+                gain = 0;
+                first = solution.get(i);
+                second = solution.get(i + 1);
+
+                for (int j = i + 2; j < numPoints; ++j) {
+                    third = solution.get(j);
+                    fourth = solution.get((j + 1) % numPoints);
+
+                    double costABCD = distMatrix[first][second] + distMatrix[third][fourth];
+                    double costACBD = distMatrix[first][third] + distMatrix[second][fourth];
+                    double diffCost = costACBD - costABCD;
+
+                    if (diffCost < gain) {
+                        gain = diffCost;
+                        bestFirst = i;
+                        bestSecond = j;
+                    }
+                }
+
+                if (gain < 0) {
+                    swap(bestFirst + 1, bestSecond, solution);
+                    improved = true;
+                }
+            }
         }
+    }
 
-        return result;
+    // Auxiliary function for 2opt
+    private void swap(int i, int j, List<Integer> solution) {
+        while (i < j) {
+            solution.set(i, solution.get(j));
+            solution.set(j, solution.get(i));
+            ++i;
+            --j;
+        }
     }
 }

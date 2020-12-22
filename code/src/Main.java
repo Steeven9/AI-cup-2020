@@ -5,7 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ThreadLocalRandom;
 
 /**
  * AI Cup 2020 @ USI, Lugano
@@ -13,23 +12,21 @@ import java.util.concurrent.ThreadLocalRandom;
  * @author Stefano Taillefert
  */
 public class Main {
-    // TODO clean up garbage prints
-
-    // Usage: Main filename [index | -1]
+    // Usage: java Main filename [index | -1]
     // - filename: filename of the problem to test
-    // - index (optional): index (start from 1) of the node to start at or -1 to test all;
-    //   if empty, use a random one
+    // - index (optional): index (starting from 1) of the node to start at or -1 to test all;
+    //   if empty, test all
     public static void main(String[] args) {
-        int index = -2;
+        int index = -1;
         String file = "";
 
         if (args.length == 1) {
-            // File only -> pick random node (done later)
+            // File only
             if (Files.isRegularFile(Paths.get(args[0]))) {
                 file = args[0];
                 //System.out.println("Using file " + file);
             } else {
-                System.out.println("Invalid filename");
+                System.err.println("Error: Invalid filename");
                 System.exit(-1);
             }
             //System.out.println("Starting from random node");
@@ -39,24 +36,22 @@ public class Main {
                 file = args[0];
                 //System.out.println("Using file " + file);
             } else {
-                System.out.println("Invalid filename");
+                System.err.println("Error: Invalid filename");
                 System.exit(-1);
             }
 
             try {
                 index = Integer.parseInt(args[1]);
-                if (index == -1) {
-                    //System.out.println("Testing all nodes (might be slow!)");
-                } else {
-                    if (index == 0) {
-                        System.err.println("Invalid index (they start from 1)");
-                        System.exit(-1);
-                    }
-                    //System.out.println("Starting from node " + index);
+                if (index == 0 || index < -1) {
+                    System.err.println("Error: Invalid index (they start from 1)");
+                    System.exit(-1);
+                }
+                //System.out.println("Starting from node " + index);
+                if (index != -1) {
                     --index;
                 }
             } catch (NumberFormatException nfe) {
-                System.err.println("Invalid index");
+                System.err.println("Error: Invalid index (they start from 1)");
                 System.exit(-1);
             }
         } else {
@@ -79,40 +74,45 @@ public class Main {
             System.exit(-1);
         }
 
-        // Initiate puroburemu!
         ProblemInstance p = new ProblemInstance(lines);
-        List<Integer> solutionPath = new ArrayList<>();
         long startTime = 0, endTime = 0;
 
         if (index == -1) {
             //Test all nodes in sequence
-            List<Integer> tempSolution;
+            List<Integer> tempSolution = p.solution;
+            int tempSolutionCost = Integer.MAX_VALUE;
 
             startTime = System.nanoTime();
             for (int i = 0; i < p.numPoints; ++i) {
-                tempSolution = p.solve(i);
-                if (p.currentSolution == p.bestComputedSolution) {
-                    solutionPath = tempSolution;
+                p.solve(i);
+                p.optimize();
+
+                if (p.currentCost < tempSolutionCost) {
+                    tempSolution = p.solution;
+                    tempSolutionCost = p.currentCost;
                 }
             }
             endTime = System.nanoTime();
+            p.solution = tempSolution;
+            p.currentCost = tempSolutionCost;
         } else {
-            if (index == -2) {
-                // Pick random starting node
-                index = ThreadLocalRandom.current().nextInt(0, p.numPoints);
-                //System.out.println("Node chosen: " + index);
-            }
             startTime = System.nanoTime();
-            solutionPath = p.solve(index);
+            p.solve(index);
+            p.optimize();
             endTime = System.nanoTime();
         }
 
-        solutionPath.forEach(e -> System.out.print((e + 1) + " "));     //cities indices start from 1
-        System.out.print("\nSolution for " + p.name + ": " + p.bestComputedSolution);
-        System.out.println(" (best known is " + p.bestKnownSolution + ")");
-        System.out.println("Start node: " + (solutionPath.get(0) + 1));
-        System.out.println("Time taken (ms): " + (endTime - startTime) / 1000000);
-        System.out.println("Nodes visited: " + (solutionPath.size() - 1) + "/" + p.numPoints);
+        // If time taken is more than 3 minutes, report error
+        if ((endTime - startTime) / 1000 >= 180000000) {
+            System.err.println("Error: timeout (more than 3 minutes)");
+        } else {
+            p.solution.forEach(e -> System.out.print((e + 1) + " "));     //cities indices start from 1
+            System.out.print("\nSolution for " + p.name + ": " + p.currentCost);
+            System.out.println(" (best known is " + p.bestKnownCost + ")");
+            System.out.println("Start node: " + (p.solution.get(0) + 1));
+            System.out.println("Time taken (ms): " + (endTime - startTime) / 1000000);
+            System.out.println("Nodes visited: " + (p.solution.size() - 1) + "/" + p.numPoints);
+        }
     }
 
     private static void exit() {

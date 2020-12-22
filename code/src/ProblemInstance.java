@@ -73,4 +73,8 @@ public class ProblemInstance {
         solution.add(startIndex);
         currentCost += distMatrix[startIndex][currentNode];
     }
+
+    public void optimize() {
+        // TODO
+    }
 }

@@ -24,33 +24,27 @@ public class Main {
             if (Files.isRegularFile(Paths.get(args[0]))) {
                 file = args[0];
             } else {
-                System.err.println("Error: Invalid filename");
-                System.exit(-1);
+                exit("Error: Invalid filename");
             }
         } else if (args.length == 2) {
             // Node specified, override index
             if (Files.isRegularFile(Paths.get(args[0]))) {
                 file = args[0];
             } else {
-                System.err.println("Error: Invalid filename");
-                System.exit(-1);
+                exit("Error: Invalid filename");
             }
 
             try {
                 index = Integer.parseInt(args[1]);
-                if (index == 0 || index < -1) {
-                    System.err.println("Error: Invalid index (they start from 1)");
-                    System.exit(-1);
+                if (index <= 0) {
+                    exit("Error: Invalid index (they start from 1)");
                 }
-                if (index != -1) {
-                    --index;
-                }
+                --index;
             } catch (NumberFormatException nfe) {
-                System.err.println("Error: Invalid index (they start from 1)");
-                System.exit(-1);
+                exit("Error: Invalid index (they start from 1)");
             }
         } else {
-            exit();
+            exit("Usage: java Main filename [index | -1]");
         }
 
         List<String> lines = new ArrayList<>();
@@ -65,8 +59,7 @@ public class Main {
             }
             reader.close();
         } catch (IOException ioe) {
-            System.err.println("Error reading file " + file);
-            System.exit(-1);
+            exit("Error reading file " + file);
         }
 
         ProblemInstance p = new ProblemInstance(lines);
@@ -80,6 +73,7 @@ public class Main {
             startTime = System.nanoTime();
             for (int i = 0; i < p.numPoints; ++i) {
                 p.solve(i);
+                p.optimize();
 
                 if (p.currentCost < tempSolutionCost) {
                     tempSolution = p.solution;
@@ -93,6 +87,7 @@ public class Main {
         } else {
             startTime = System.nanoTime();
             p.solve(index);
+            p.optimize();
             endTime = System.nanoTime();
         }
 
@@ -109,8 +104,8 @@ public class Main {
         System.out.println("Nodes visited: " + (p.solution.size() - 1) + "/" + p.numPoints);
     }
 
-    private static void exit() {
-        System.err.println("Usage: java Main filename [index | -1]");
+    private static void exit(String msg) {
+        System.err.println(msg);
         System.exit(-1);
     }
 }

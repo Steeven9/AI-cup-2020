@@ -9,7 +9,7 @@ public class ProblemInstance {
     public List<String> lines;
     public String name;
     public int bestKnownCost;
-    public int currentCost = 0;
+    public int currentCost = Integer.MAX_VALUE;
     public List<Point> points = new ArrayList<>();
     public int numPoints;
     public double[][] distMatrix;
@@ -38,6 +38,11 @@ public class ProblemInstance {
     }
 
     public void solve(int startIndex) {
+        if (startIndex > numPoints) {
+            System.err.println("Error: Invalid index (they start from 1)");
+            System.exit(-1);
+        }
+
         solution = new ArrayList<>();
         currentCost = 0;
         int currentNode = startIndex;

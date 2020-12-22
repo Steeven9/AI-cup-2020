@@ -8,14 +8,14 @@ import java.util.List;
 
 /**
  * AI Cup 2020 @ USI, Lugano
- * The main wrapper to compute a TSP problem.
+ * The main wrapper to compute a TSP problem. The algorithm used is best Nearest-Neighbour
+ * with the 2opt optimizer.
  * @author Stefano Taillefert
  */
 public class Main {
-    // Usage: java Main filename [index | -1]
+    // Usage: java Main filename [index]
     // - filename: filename of the problem to test
-    // - index (optional): index (starting from 1) of the node to start at or -1 to test all;
-    //   if empty, test all
+    // - index (optional): index (starting from 1) of the node to start at, or empty to test all
     public static void main(String[] args) {
         int index = -1;
         String file = "";
@@ -24,17 +24,14 @@ public class Main {
             // File only
             if (Files.isRegularFile(Paths.get(args[0]))) {
                 file = args[0];
-                //System.out.println("Using file " + file);
             } else {
                 System.err.println("Error: Invalid filename");
                 System.exit(-1);
             }
-            //System.out.println("Starting from random node");
         } else if (args.length == 2) {
             // Node specified, override index
             if (Files.isRegularFile(Paths.get(args[0]))) {
                 file = args[0];
-                //System.out.println("Using file " + file);
             } else {
                 System.err.println("Error: Invalid filename");
                 System.exit(-1);
@@ -46,7 +43,6 @@ public class Main {
                     System.err.println("Error: Invalid index (they start from 1)");
                     System.exit(-1);
                 }
-                //System.out.println("Starting from node " + index);
                 if (index != -1) {
                     --index;
                 }
@@ -80,12 +76,12 @@ public class Main {
         if (index == -1) {
             //Test all nodes in sequence
             List<Integer> tempSolution = p.solution;
-            int tempSolutionCost = Integer.MAX_VALUE;
+            int tempSolutionCost = p.currentCost;
 
             startTime = System.nanoTime();
             for (int i = 0; i < p.numPoints; ++i) {
                 p.solve(i);
-                p.optimize();
+                //p.optimize();
 
                 if (p.currentCost < tempSolutionCost) {
                     tempSolution = p.solution;
@@ -93,6 +89,7 @@ public class Main {
                 }
             }
             endTime = System.nanoTime();
+
             p.solution = tempSolution;
             p.currentCost = tempSolutionCost;
         } else {
@@ -105,14 +102,14 @@ public class Main {
         // If time taken is more than 3 minutes, report error
         if ((endTime - startTime) / 1000 >= 180000000) {
             System.err.println("Error: timeout (more than 3 minutes)");
-        } else {
-            p.solution.forEach(e -> System.out.print((e + 1) + " "));     //cities indices start from 1
-            System.out.print("\nSolution for " + p.name + ": " + p.currentCost);
-            System.out.println(" (best known is " + p.bestKnownCost + ")");
-            System.out.println("Start node: " + (p.solution.get(0) + 1));
-            System.out.println("Time taken (ms): " + (endTime - startTime) / 1000000);
-            System.out.println("Nodes visited: " + (p.solution.size() - 1) + "/" + p.numPoints);
         }
+
+        p.solution.forEach(e -> System.out.print((e + 1) + " "));     //cities indices start from 1
+        System.out.print("\nSolution for " + p.name + ": " + p.currentCost);
+        System.out.println(" (best known is " + p.bestKnownCost + ")");
+        System.out.println("Start node: " + (p.solution.get(0) + 1));
+        System.out.println("Time taken (ms): " + (endTime - startTime) / 1000000);
+        System.out.println("Nodes visited: " + (p.solution.size() - 1) + "/" + p.numPoints);
     }
 
     private static void exit() {
